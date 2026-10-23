@@ -29,6 +29,7 @@ import "@fontsource/ibm-plex-sans/latin-500.css";
 import "@fontsource/ibm-plex-sans/latin-600.css";
 import "@fontsource/ibm-plex-sans/latin-700.css";
 import "./style.css";
+import "./modern.css";
 import { reports } from "./data";
 import { Action, FilterBar, Select, Source, Notice, fmt } from "./components";
 import {
@@ -341,7 +342,12 @@ function App() {
                   <span>/</span>NEXUS REPORTING
                 </div>
                 <h1>{page.title}</h1>
-                <p>{page.description}</p>
+                <details className="page-context">
+                  <summary>
+                    Over dit rapport <Info size={13} />
+                  </summary>
+                  <p>{page.description}</p>
+                </details>
               </div>
               <div className="administration">
                 <span className="admin-icon">
@@ -357,22 +363,17 @@ function App() {
               </div>
             </div>
             <div className="snapshot-note">
-              <Info size={15} />
-              <span>
-                Interactief ontwerp op basis van jouw screenshots. Geen live
-                SAP-verbinding.
-              </span>
-              <a
-                href="./README.md"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document
-                    .getElementById("source-info")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                Over de gegevens <ArrowUpRight size={12} />
-              </a>
+              <span className="prototype-dot" />
+              <span>Interactief voorbeeld</span>
+              <details>
+                <summary>
+                  Gegevens <Info size={12} />
+                </summary>
+                <p>
+                  Ontwerp op basis van je screenshots. Geen live SAP-verbinding.
+                  Grafiekpunten zijn indicatief; tabelbedragen zijn overgenomen.
+                </p>
+              </details>
             </div>
             {id !== "account" && (
               <>

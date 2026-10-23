@@ -22,6 +22,12 @@ npm run build
 npm run preview
 ```
 
+## Visuele vernieuwing
+
+De vernieuwde versie geeft grafieken voorrang: een grafietkleurige navigatiekolom, grote kerncijfers met indicatieve trends, een brede wisselbare area-grafiek, donutgrafieken en horizontale staafdiagrammen. Het dashboard heeft zeven grote grafieken; debiteuren, crediteuren, Finance, goederenstromen en voorraad hebben aanvullende visuele overzichten. Toelichtingen, broninformatie en waarschuwingen zijn uitklapbaar, zodat de gegevens behouden blijven zonder lange tekstblokken in het overzicht.
+
+De donut voor klantconcentratie gebruikt de top 5 uit de screenshots gedeeld door de netto jaarverkoop. Voorraadstatus gebruikt de 8.294 bronposities. Geen extra historische datapunten zijn als echte bronwaarden toegevoegd.
+
 ## Wat werkt
 
 - Dashboard en navigatie naar Finance, Sales, Purchase, Inventory, Management en Mijn account.
@@ -64,7 +70,9 @@ De rooktest controleert alle 17 werkplekschermen, zoeken, sorteren, paginering, 
 - `src/pages.jsx`: rapportpagina’s.
 - `src/components.jsx`: gedeelde tabellen, filters, grafieken en exports.
 - `src/data.js`: zichtbare brongegevens.
-- `src/style.css`: kleuren, typografie, layouts, responsive en print.
+- `src/style.css`: gedeelde basisstijlen.
+- `src/modern.css`: visuele vernieuwing, responsive en print.
+- `src/visuals.jsx`: donutgrafieken, horizontale staafdiagrammen, kerncijfers en voorraadprofiel.
 
 De live website blijft ongewijzigd. Voor ingebruikname zijn een echte databron, autorisatie, authenticatie en deployment in de eigen infrastructuur nodig.
 

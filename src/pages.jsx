@@ -25,6 +25,7 @@ import {
   money,
 } from "./components";
 import * as D from "./data";
+import { MetricDeck, Donut, HorizontalBars, StockVisual } from "./visuals";
 export const agingCols = [
   "Relatie",
   "Naam",
@@ -157,58 +158,122 @@ const daily = [
   profit: v * 0.25 * 1e6,
 }));
 export function Dashboard({ go }) {
+  const [view, setView] = useState("Verkoop");
+  const all = result.map((r, i) => ({
+    ...r,
+    sales: revenue[i].value,
+    purchases: purchases[i].value,
+  }));
   return (
     <>
-      <div className="dashboard-intro">
-        <div>
-          <span className="eyebrow">FINANCIEEL OVERZICHT · 2025</span>
-          <h2>Een jaar in perspectief.</h2>
-          <p>De belangrijkste cijfers van Nexus Reporting Services.</p>
-        </div>
-        <span className="badge success">
-          <CheckCircle /> Broncontrole aangesloten
-        </span>
-      </div>
-      <Stats
+      <MetricDeck
         items={[
-          [
-            "Resultaat in de periode",
-            26715556.84,
-            "SRD",
-            "Geboekt nettoresultaat · positief = winst",
-          ],
-          ["Netto verkoop", 209582120.03, "SRD", "Gefactureerde netto verkoop"],
-          ["Inkoopwaarde", 131186499.02, "SRD", "Gefactureerde netto inkoop"],
-          [
-            "Actuele voorraadwaarde",
-            39698591.12,
-            "SRD",
-            "Laatste geslaagde bronsync",
-          ],
+          {
+            label: "Netto verkoop",
+            value: 209582120.03,
+            series: revenue.map((r) => r.value),
+            tag: "Boekjaar 2025 · SRD",
+            go: () => go("sales"),
+          },
+          {
+            label: "Nettoresultaat",
+            value: 26715556.84,
+            series: result.map((r) => r.value),
+            tag: "Geboekt resultaat",
+            go: () => go("profit"),
+          },
+          {
+            label: "Inkoopwaarde",
+            value: 131186499.02,
+            series: purchases.map((r) => r.value),
+            tag: "Gefactureerde inkoop",
+            go: () => go("purchase"),
+          },
+          {
+            label: "Voorraadwaarde",
+            value: 39698591.12,
+            tag: "Actueel · laatste bronsync",
+            go: () => go("inventory"),
+          },
         ]}
       />
-      <div className="balance-strip">
-        <span className="round-icon">
-          <CheckCircle size={22} />
-        </span>
-        <div>
-          <strong>Balans in evenwicht</strong>
-          <p>Per 31 dec. 2025 · inclusief cumulatief resultaat</p>
+      <div className="visual-primary">
+        <div className="trend-feature">
+          <div className="feature-toolbar">
+            <span className="feature-label">PRESTATIES</span>
+            <div className="segmented">
+              {["Verkoop", "Inkoop", "Resultaat"].map((v) => (
+                <button
+                  key={v}
+                  className={view === v ? "active" : ""}
+                  onClick={() => setView(v)}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Chart
+            title={
+              view === "Verkoop"
+                ? "Verkoopontwikkeling"
+                : view === "Inkoop"
+                  ? "Inkoopontwikkeling"
+                  : "Resultaatontwikkeling"
+            }
+            sub="Maanden van 2025; visuele reconstructie uit de screenshots, geen exacte bronpunten."
+            data={all}
+            keys={[
+              view === "Verkoop"
+                ? "sales"
+                : view === "Inkoop"
+                  ? "purchases"
+                  : "value",
+            ]}
+            labels={[view]}
+            total={
+              view === "Verkoop"
+                ? 209582120.03
+                : view === "Inkoop"
+                  ? 131186499.02
+                  : 26715556.84
+            }
+            approx
+            go={() =>
+              go(
+                view === "Verkoop"
+                  ? "sales"
+                  : view === "Inkoop"
+                    ? "purchase"
+                    : "profit",
+              )
+            }
+          />
         </div>
-        <div className="balance-number">
-          <span>Werkelijk verschil</span>
-          <strong>
-            0,00 <small>SRD</small>
-          </strong>
-        </div>
-        <button className="text-button" onClick={() => go("balance")}>
-          Bekijk balans <ArrowRight />
-        </button>
+        <Donut
+          title="Klantconcentratie"
+          sub="Aandeel van de top 5 klanten in de netto jaarverkoop."
+          items={[
+            ["Top 5 klanten", D.customers.reduce((a, r) => a + r[1], 0)],
+            [
+              "Overige klanten",
+              209582120.03 - D.customers.reduce((a, r) => a + r[1], 0),
+            ],
+          ]}
+          center={
+            (
+              (D.customers.reduce((a, r) => a + r[1], 0) / 209582120.03) *
+              100
+            ).toLocaleString("nl-NL", { maximumFractionDigits: 1 }) + "%"
+          }
+          caption="top 5 aandeel"
+          onSelect={() => go("sales")}
+        />
       </div>
-      <div className="grid-two">
+      <div className="visual-secondary">
         <Chart
-          title="Resultaat per maand"
-          sub="Ontwikkeling per maand · 2025 en 2024 · SRD"
+          title="Maandresultaat"
+          sub="2025 versus 2024 · SRD · indicatieve maandpunten"
           data={result}
           keys={["value", "previous"]}
           labels={["2025", "2024"]}
@@ -216,80 +281,73 @@ export function Dashboard({ go }) {
           approx
           go={() => go("profit")}
         />
-        <Chart
-          title="Netto verkoop per maand"
-          sub="Commercieel · gefactureerde netto verkoop"
-          data={revenue}
-          bar
-          approx
-          go={() => go("sales")}
-        />
-        <Ranked
-          title="Top 5 klanten"
-          sub="Netto factuurwaarde per klant"
+        <HorizontalBars
+          title="Topklanten"
+          sub="Netto factuurwaarde · top 5 van 1.096 relaties/magazijnen"
           items={D.customers}
-          go={() => go("sales")}
-          note="Creditnota’s afgetrokken · 1.096 relaties/magazijnen in de volledige rapportselectie."
+          onSelect={() => go("sales")}
         />
-        <Chart
-          title="Inkoopwaarde per maand"
-          sub="Factuurregels minus creditnota’s · excl. btw en vracht"
-          data={purchases}
-          bar
-          approx
-          go={() => go("purchase")}
-        />
-        <Ranked
-          title="Top 5 leveranciers"
-          sub="Netto factuurwaarde per leverancier"
-          items={D.vendors}
-          go={() => go("purchase")}
-          note="Creditnota’s afgetrokken · 24 relaties/magazijnen in de volledige rapportselectie."
-        />
-        <Ranked
-          title="Huidige voorraad per magazijn"
-          sub="Vastgelegde SAP-bronstand · onafhankelijk van periodefilter"
-          items={D.warehouses}
-          unit="voorraadeenheden"
-          go={() => go("inventory")}
-          note="Magazijnwaarde is niet beschikbaar. Uiteenlopende artikeleenheden zijn niet omgerekend. 11 magazijnen in de volledige bron."
+        <Donut
+          title="Voorraadstatus"
+          sub="8.294 artikel/magazijnposities op 22 oktober 2026."
+          items={[
+            ["Voorraad met historie", 586],
+            ["Herkomst onbekend", 516],
+            ["Negatieve voorraad", 1],
+            ["Geen voorraad", 7191],
+          ]}
+          center="8.294"
+          caption="voorraadposities"
+          unit="posities"
+          onSelect={() => go("age")}
         />
       </div>
-      <Notice title="Kengetallen klaar voor inrichting">
-        Controleer de rekeningindeling voor marges, EBIT, EBITDA en financiële
-        ratio’s. Dezelfde periode vorig jaar heeft een resultaat van 0,00 SRD;
-        verschil +26.715.556,84 SRD.
-      </Notice>
-      <details className="evidence">
-        <summary>Grootste afwijkingen & aansluiting</summary>
-        <p>
-          De screenshot bevat geen uitgeklapte details van dit onderdeel.
-          Aanvullende brongegevens zijn nodig om de afwijkingen te verklaren.
-        </p>
-      </details>
-      <Panel title="Verder in de rapportages" sub="Jouw werkgebieden">
-        <div className="module-links">
-          {[
-            ["Finance", "profit", "Balans, resultaat en grootboek"],
-            ["Sales", "sales", "Omzet, klanten en documenten"],
-            ["Purchase", "purchase", "Inkoop, leveranciers en orders"],
-            ["Inventory", "inventory", "Voorraad en bewegingen"],
-            ["Management", "comparison", "Administraties en werkkapitaal"],
-          ].map(([title, id, desc]) => (
-            <button key={id} onClick={() => go(id)}>
-              <ChartBar size={20} />
-              <strong>{title}</strong>
-              <p>{desc}</p>
-              <ArrowUpRight size={18} />
-            </button>
-          ))}
-        </div>
-      </Panel>
+      <div className="grid-two">
+        <HorizontalBars
+          title="Top leveranciers"
+          sub="Netto factuurwaarde · 24 relaties/magazijnen in de bron"
+          items={D.vendors}
+          color="#5868db"
+          onSelect={() => go("purchase")}
+        />
+        <HorizontalBars
+          title="Magazijnvoorraad"
+          sub="Voorraadeenheden; verschillende artikeleenheden zijn niet omgerekend. Geen magazijnwaardering beschikbaar. Zichtbare 6 van 11 magazijnen."
+          items={D.warehouses}
+          unit="eenheden"
+          color="#6c8ca6"
+          onSelect={() => go("inventory")}
+        />
+      </div>
+      <div className="dashboard-status">
+        <span>
+          <CheckCircle size={17} /> Balans in evenwicht <b>0,00 SRD</b>
+        </span>
+        <button className="text-button" onClick={() => go("balance")}>
+          Open balans <ArrowRight />
+        </button>
+      </div>
+      <div className="module-dock">
+        {[
+          ["Finance", "profit"],
+          ["Sales", "sales"],
+          ["Purchase", "purchase"],
+          ["Inventory", "inventory"],
+          ["Management", "comparison"],
+        ].map(([name, id]) => (
+          <button key={id} onClick={() => go(id)}>
+            {name}
+            <ArrowUpRight size={18} />
+          </button>
+        ))}
+      </div>
       <Evidence count={6}>
         <p>
-          Rapporten zijn alleen-lezen. Voorraadwaardering per magazijn
-          ontbreekt. Financiële ratio’s wachten op goedgekeurde
-          rekeningclassificatie.
+          Dezelfde periode vorig jaar: 0,00 SRD. Verschil: +26.715.556,84 SRD.
+          Kengetallen wachten op goedgekeurde rekeningclassificatie.
+          Broncontrole aangesloten. Balans per 31 december 2025 inclusief
+          cumulatief resultaat. Grafiekpunten en sparklines zijn indicatief;
+          zichtbare bronbedragen zijn overgenomen.
         </p>
       </Evidence>
     </>
@@ -313,6 +371,24 @@ export function AgingPage({ credit = false }) {
           ],
         ]}
       />
+      <div className="grid-two">
+        <Donut
+          title="Ouderdomsverdeling"
+          items={labels.map((l, i) => [
+            l,
+            (credit ? D.creditorAges : D.debtorAges)[i],
+          ])}
+          center={credit ? "154,5 mln" : "10,5 mln"}
+          caption="openstaand · SRD"
+          onSelect={setSelected}
+        />
+        <HorizontalBars
+          title={credit ? "Grootste verplichtingen" : "Grootste vorderingen"}
+          sub="Top 5 van de zichtbare relaties; open bedrag."
+          items={rows.slice(0, 5).map((r) => [r[1], r[2]])}
+          color={credit ? "#5868db" : "#00a9a0"}
+        />
+      </div>
       <Buckets
         labels={labels}
         values={credit ? D.creditorAges : D.debtorAges}
@@ -372,6 +448,18 @@ export function GoodsPage() {
           <strong className="warning-text">Niet beschikbaar</strong>
         </div>
       </div>
+      <HorizontalBars
+        title="Goederenstromen"
+        sub="Bedragen uit de bron · zonder interne overboekingen en begin/eindvoorraad."
+        items={D.goodsRows
+          .filter(
+            (r) =>
+              !r[0].includes("overboek") &&
+              !r[0].includes("voorraad volgens") &&
+              r[0] !== "Beginvoorraad",
+          )
+          .map((r) => [r[0], r[4]])}
+      />
       <DataTable
         title="Goederenbeweging"
         sub="1 jan. 2026 – 22 okt. 2026 · bedragen in SRD"
@@ -416,6 +504,27 @@ export function FinancePage({ id, go }) {
           ? "Er is geen afzonderlijke balansscreenshot meegeleverd. Deze weergave toont de beschikbare balansrekeningen uit de proefbalans; een volledige balans is nog niet beschikbaar."
           : "Bekijk de aandachtspunten voor deze periode. Brutowinst, EBIT en EBITDA zijn nog niet beschikbaar door ontbrekende rekeningclassificatie."}
       </Notice>
+      <HorizontalBars
+        title={
+          trial || balance
+            ? "Beschikbare balansrubrieken"
+            : "Kosten & resultaat"
+        }
+        sub="Zichtbare bronwaarden; rubrieken tellen niet dubbel mee."
+        items={
+          trial || balance
+            ? D.trialRows
+                .filter((r, i) => [1, 4, 5, 6, 7, 8, 9].includes(i))
+                .map((r) => [r[0], r[6]])
+            : [
+                ["Afschrijvingen", 69081.38],
+                ["Kostprijs verkopen", 8371263.3],
+                ["Overige opbrengsten", 18410.19],
+                ["Resultaat", 2478032.28],
+              ]
+        }
+        color="#5868db"
+      />
       <div className="report-tabs">
         {[
           ["balance", "Balans"],
@@ -763,7 +872,7 @@ export function AbcPage() {
             vraag of onvoldoende historie.
           </p>
         </section>
-        <Ranked
+        <HorizontalBars
           title="Waardeconcentratie"
           sub="Zichtbare topartikelen · positieve waarden · totaal 209.582.120,03 SRD"
           items={D.articles.slice(0, 7).map((r) => [r[1], r[2]])}
@@ -836,6 +945,9 @@ export function StockPage({ turnover = false }) {
         De historische hoeveelheden kunnen niet volledig worden gecontroleerd.
         De selectie bevat een negatieve of onvolledige hoeveelhedenhistorie.
       </Notice>
+      {turnover && (
+        <StockVisual labels={D.stockAgeLabels} values={D.stockAges} />
+      )}
       {turnover ? (
         <Stats
           items={[
@@ -844,10 +956,9 @@ export function StockPage({ turnover = false }) {
           ]}
         />
       ) : (
-        <Buckets
+        <StockVisual
           labels={D.stockAgeLabels}
           values={D.stockAges}
-          unit="posities"
           selected={bucket}
           onSelect={setBucket}
         />
@@ -961,7 +1072,7 @@ export function Capital({ go }) {
   return (
     <>
       <div className="grid-two">
-        <Ranked
+        <HorizontalBars
           title="Waar zit het geld?"
           sub="Eén administratie · dezelfde peildatum · bedragen in SRD"
           items={cash}

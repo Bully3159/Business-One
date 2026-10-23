@@ -13,6 +13,7 @@ import {
   MagnifyingGlass,
   X,
   FileText,
+  Info,
   CaretRight,
   ArrowsClockwise,
   ChartBar,
@@ -23,6 +24,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   LineChart,
   Line,
   XAxis,
@@ -59,7 +62,14 @@ export function Panel({ title, sub, action, children, className = "" }) {
       <div className="panel-head">
         <div>
           <h2>{title}</h2>
-          {sub && <p>{sub}</p>}
+          {sub && (
+            <details className="panel-context">
+              <summary aria-label={"Toelichting bij " + title}>
+                <Info size={15} />
+              </summary>
+              <p>{sub}</p>
+            </details>
+          )}
         </div>
         {action}
       </div>
@@ -67,29 +77,32 @@ export function Panel({ title, sub, action, children, className = "" }) {
     </section>
   );
 }
-export function Source({ compact = false }) {
+export function Source() {
   return (
-    <div className={"source " + (compact ? "compact" : "")}>
-      <ShieldCheck size={17} />
-      <strong>SQL-rapportagebron</strong>
-      <span>
-        Laatste bronsync <b>22 okt. 2026 · 12:38:17</b>
-      </span>
-      <span className="source-state">
-        <CheckCircle size={14} /> Bron bijgewerkt
-      </span>
-    </div>
+    <details className="source-compact">
+      <summary>
+        <ShieldCheck size={14} />
+        <span>Bron · 22 okt. 2026</span>
+        <span className="source-check">Aangesloten</span>
+      </summary>
+      <p>
+        SQL-rapportagebron · laatste bronsync 22 oktober 2026, 12:38:17. Bron
+        bijgewerkt. Deze versie bevat screenshotgegevens, zonder live
+        SAP-verbinding.
+      </p>
+    </details>
   );
 }
 export function Notice({ children, title = "Aandachtspunt", danger = false }) {
   return (
-    <div className={"notice " + (danger ? "danger" : "")}>
-      <Warning size={21} />
-      <div>
+    <details className={"notice disclosure " + (danger ? "danger" : "")}>
+      <summary>
+        <Warning size={18} />
         <strong>{title}</strong>
-        <p>{children}</p>
-      </div>
-    </div>
+        <span>Details</span>
+      </summary>
+      <p>{children}</p>
+    </details>
   );
 }
 export function Stats({ items }) {
@@ -111,7 +124,12 @@ export function Stats({ items }) {
             )}{" "}
             {value !== null && <small>{unit}</small>}
           </div>
-          {note && <span className="stat-note">{note}</span>}
+          {note && (
+            <span className="stat-note" title={note}>
+              <Info size={13} />
+              <span className="sr-only">{note}</span>
+            </span>
+          )}
         </div>
       ))}
     </div>
@@ -199,7 +217,12 @@ export function Ranked({ title, sub, items, go, unit = "SRD", note }) {
           </div>
         ))}
       </div>
-      {note && <p className="panel-note">{note}</p>}
+      {note && (
+        <details className="chart-caption">
+          <summary>Broninformatie</summary>
+          <p>{note}</p>
+        </details>
+      )}
     </Panel>
   );
 }
@@ -682,14 +705,14 @@ export function Chart({
                     isAnimationActive={false}
                     key={k}
                     dataKey={k}
-                    fill={i ? "#a9bac5" : "#087f86"}
+                    fill={i ? "#b8c3f0" : "#00a9a0"}
                     radius={[3, 3, 0, 0]}
                     maxBarSize={26}
                   />
                 ))}
               </BarChart>
             ) : (
-              <LineChart
+              <AreaChart
                 data={data}
                 margin={{ top: 16, right: 12, bottom: 0, left: 0 }}
               >
@@ -717,18 +740,20 @@ export function Chart({
                   formatter={(v, i) => [fmt(v), labels[keys.indexOf(i)] || i]}
                 />
                 {keys.map((k, i) => (
-                  <Line
+                  <Area
                     isAnimationActive={false}
                     key={k}
                     dataKey={k}
-                    stroke={i ? "#bc8a35" : "#087f86"}
-                    strokeWidth={2.5}
+                    stroke={i ? "#5868db" : "#00a9a0"}
+                    type="monotone"
+                    fill={i ? "#5868db10" : "#00a9a018"}
+                    strokeWidth={3}
                     dot={false}
                     activeDot={{ r: 5 }}
                     strokeDasharray={i ? "5 4" : undefined}
                   />
                 ))}
-              </LineChart>
+              </AreaChart>
             )}
           </ResponsiveContainer>
         </div>
@@ -749,10 +774,13 @@ export function Chart({
         )}
       </div>
       {approx && (
-        <p className="panel-note">
-          Visuele reconstructie uit de screenshot. Grafiekpunten zijn
-          indicatief; getoonde totalen zijn overgenomen.
-        </p>
+        <details className="chart-caption">
+          <summary>Indicatieve grafiek</summary>
+          <p>
+            Visuele reconstructie uit de screenshot. Grafiekpunten zijn
+            indicatief; getoonde totalen zijn overgenomen.
+          </p>
+        </details>
       )}
     </Panel>
   );

@@ -97,6 +97,21 @@ const assert = require("assert");
   await p.getByRole("button", { name: "Tabel", exact: true }).first().click();
   assert.equal(await p.locator(".chart-data tbody tr").count(), 12);
   console.log("PASS chart table");
+  await p.getByRole("button", {name:"Inkoop",exact:true}).click();
+  await p.getByRole("heading", {name:"Inkoopontwikkeling",exact:true}).waitFor();
+  assert((await p.locator(".trend-feature .chart-total").innerText()).includes("131.186.499,02"));
+  await p.getByRole("button", {name:"Resultaat",exact:true}).click();
+  await p.getByRole("heading", {name:"Resultaatontwikkeling",exact:true}).waitFor();
+  assert((await p.locator(".trend-feature .chart-total").innerText()).includes("26.715.556,84"));
+  await p.getByRole("button", {name:"Verkoop",exact:true}).click();
+  assert.equal(await p.locator(".donut-chart").count(),2);
+  await p.locator(".donut-legend button").first().click();
+  await p.getByRole("heading", {name:"Verkoopanalyse",exact:true}).waitFor();
+  await p.goto("http://localhost:5173/#age");
+  await p.locator(".stock-profile-legend button").filter({hasText:"31–60 dagen"}).click();
+  assert((await p.locator("tbody").innerText()).includes("Geen resultaten"));
+  console.log("PASS metric views, donut navigation and stock profile selection");
+
   for (const width of [320, 768, 1024, 1440]) {
     await p.setViewportSize({ width, height: 900 });
     for (const id of [
@@ -122,7 +137,9 @@ const assert = require("assert");
   await p.screenshot({ path: "docs/mobile.png", fullPage: true });
   await p.getByRole("button", { name: "Navigatie in- of uitklappen" }).click();
   await p.getByRole("button", { name: "Debiteurenaging", exact: true }).click();
-  await p.getByRole("heading", {name: "Debiteurenaging", exact: true}).waitFor();
+  await p
+    .getByRole("heading", { name: "Debiteurenaging", exact: true })
+    .waitFor();
   await p.setViewportSize({ width: 1440, height: 1080 });
   await p.goto("http://localhost:5173/#debtors");
   await p.screenshot({ path: "docs/debtors.png", fullPage: true });
